@@ -8,7 +8,7 @@
 #include <string>
 
 class GLApplication : public GLWidget {
-  Q_OBJECT  
+  Q_OBJECT
 public:
   GLApplication();
   virtual ~GLApplication();

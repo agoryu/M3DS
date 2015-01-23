@@ -267,7 +267,7 @@ void GLApplication::initTriangleVAO() {
   glBindVertexArray(0);
 }
 
-void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
+/*void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
 
     unsigned int pas = (sqrt((xmin * xmin)) + sqrt((xmax * xmax))) / nbSlice;
 
@@ -276,5 +276,5 @@ void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float
         _trianglePosition.push_back();
         _trianglePosition.push_back();
     }
-}
+}*/
 
