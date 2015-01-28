@@ -44,7 +44,7 @@ GLApplication::GLApplication() {
     0.9,0.0,0.0,1
   };*/
 
-    _trianglePosition = {
+    /*_trianglePosition = {
         -0.8,-0.8,0.0,
         -0.8,0.8,0.0,
         -0.4,-0.8,0.0,
@@ -54,21 +54,24 @@ GLApplication::GLApplication() {
         0.4,-0.8,0.0,
         0.4,0.8,0.0,
         0.8,-0.8,0.0
-      };
+      };*/
+
+
       // tous les sommets à rouge :
-      _triangleColor.clear();
+      /*_triangleColor.clear();
       for(unsigned int i=0;i<9;++i) {
         _triangleColor.push_back(1);_triangleColor.push_back(0);_triangleColor.push_back(0);_triangleColor.push_back(1);
-      }
-
+      }*/
+    //initStrip(10, -0.8, 0.8, -0.8 , 0.8);
+    _retrecie = true;
+    _coeff = 1;
+    initRing(100, 0.2, 0.6);
   _elementData = {
       0, 3, 2, 2, 1, 4
   };
 
 
 }
-
-
 
 
 /** ********************************************************************** **/
@@ -78,11 +81,11 @@ void GLApplication::initialize() {
   glClearColor(1,1,1,1);
 
   glLineWidth(2.0);
-  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 
   _shader0=initProgram("simple");
-
 
   initTriangleBuffer();
   initTriangleVAO();
@@ -104,13 +107,24 @@ void GLApplication::update() {
   // => mettre à jour les données de l'application
   // avant l'affichage de la prochaine image (animation)
   // ...
-
+    if(_retrecie) {
+        _coeff -= 0.2;
+        if(_coeff == 0) {
+            _retrecie = false;
+        }
+    } else {
+        _coeff += 0.2;
+        if(_coeff == 1) {
+            _retrecie = true;
+        }
+    }
 
 }
 
 void GLApplication::draw() {
   // appelée après chaque update
   // => tracer toute l'image
+  glUniform1f(glGetUniformLocation(_shader0,"coeff"),_coeff);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glUseProgram(_shader0);
@@ -118,7 +132,7 @@ void GLApplication::draw() {
 
   //glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
   //glDrawArrays(GL_TRIANGLES,0,9);
-  glDrawArrays(GL_TRIANGLE_STRIP,0,8);
+  glDrawArrays(GL_TRIANGLE_STRIP,0,_nbPoint);
 
   glBindVertexArray(0);
   glUseProgram(0);
@@ -267,14 +281,75 @@ void GLApplication::initTriangleVAO() {
   glBindVertexArray(0);
 }
 
-/*void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
+void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
 
-    unsigned int pas = (sqrt((xmin * xmin)) + sqrt((xmax * xmax))) / nbSlice;
+    float pas = (sqrt((xmin * xmin)) + sqrt((xmax * xmax))) / nbSlice;
+    float pasCouleur = 0.5 / nbSlice;
+    _nbPoint = 2 * nbSlice;
 
-    for(int i=0; i<nbSlice; i++) {
-        _trianglePosition.push_back(xmin + i * pas);
-        _trianglePosition.push_back();
-        _trianglePosition.push_back();
+    for(GLuint i=0; i<=_nbPoint; i++) {
+
+        if(i%2 == 0) {
+            _trianglePosition.push_back(xmin + i/2 * pas);
+
+            _trianglePosition.push_back(ymin);
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(i * pasCouleur);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+
+        } else {
+            _trianglePosition.push_back(xmin + ((i - 1) / 2) * pas);
+
+            _trianglePosition.push_back(ymax);
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(1 - (i * pasCouleur));
+            _triangleColor.push_back(0.0);
+
+        }
+
+        _trianglePosition.push_back(0.0);
     }
-}*/
 
+}
+
+void GLApplication::initRing(int nbSlice,float r0,float r1) {
+
+    float pasCouleur = 1.0 / nbSlice;
+    double theta = 0;
+    const double pi = 3.14159;
+
+    _nbPoint = 2 * nbSlice;
+
+    for(GLuint i=0; i<=_nbPoint; i++) {
+
+        if(i%2 == 0) {
+            theta = ((2 * pi) / nbSlice) * i;
+
+            _trianglePosition.push_back(r0 * cos(theta));
+
+            _trianglePosition.push_back(r0 * sin(theta));
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back((i/2) * pasCouleur);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+
+        } else {
+            _trianglePosition.push_back(r1 * cos(theta));
+
+            _trianglePosition.push_back(r1 * sin(theta));
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(1 - ((i/2) * pasCouleur));
+            _triangleColor.push_back(0.0);
+
+        }
+
+        _trianglePosition.push_back(0.0);
+    }
+}

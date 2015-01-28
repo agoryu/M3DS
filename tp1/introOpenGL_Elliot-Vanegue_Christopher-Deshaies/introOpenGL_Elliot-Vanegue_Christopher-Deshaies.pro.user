@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.3.0, 2015-01-23T20:45:43. -->
+<!-- Written by QtCreator 3.3.0, 2015-01-28T12:09:46. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -237,8 +237,8 @@
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">introOpenGL_Elliot-Vanegue_Christopher-Deshaies</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/agoryu/Downloads/introOpenGL_Elliot-Vanegue_Christopher-Deshaies/introOpenGL_Elliot-Vanegue_Christopher-Deshaies.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">introOpenGL_Elliot-Vanegue_Christopher-Deshaies2</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/agoryu/Documents/universite/M3DS/tp1/introOpenGL_Elliot-Vanegue_Christopher-Deshaies/introOpenGL_Elliot-Vanegue_Christopher-Deshaies.pro</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments"></value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">introOpenGL_Elliot-Vanegue_Christopher-Deshaies.pro</value>
     <value type="bool" key="Qt4ProjectManager.Qt4RunConfiguration.UseDyldImageSuffix">false</value>
