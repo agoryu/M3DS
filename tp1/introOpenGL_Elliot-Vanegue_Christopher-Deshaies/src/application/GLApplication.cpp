@@ -65,11 +65,20 @@ GLApplication::GLApplication() {
     //initStrip(10, -0.8, 0.8, -0.8 , 0.8);
     _retrecie = true;
     _coeff = 1;
+    cpt = 0;
     initRing(100, 0.2, 0.6);
-  _elementData = {
+  /*_elementData = {
       0, 3, 2, 2, 1, 4
-  };
+  };*/
 
+  /*_trianglePosition = { -0.6,-0.8,0,
+                        -0.6,0.8,0,
+                        0.6,-0.8,0,
+                        0.6,0.8,0 };*/
+  /*_triangleTexCoord = { 0,0.5,
+                        0,1,
+                        1,0.5,
+                        1,1 };*/
 
 }
 
@@ -107,16 +116,20 @@ void GLApplication::update() {
   // => mettre à jour les données de l'application
   // avant l'affichage de la prochaine image (animation)
   // ...
-    if(_retrecie) {
-        _coeff -= 0.2;
-        if(_coeff == 0) {
-            _retrecie = false;
+    cpt++;
+    if(cpt == 100){
+        if(_retrecie) {
+            _coeff -= 0.2;
+            if(_coeff <= 0.0) {
+                _retrecie = false;
+            }
+        } else {
+            _coeff += 0.2;
+            if(_coeff >= 1.0) {
+                _retrecie = true;
+            }
         }
-    } else {
-        _coeff += 0.2;
-        if(_coeff == 1) {
-            _retrecie = true;
-        }
+        cpt = 0;
     }
 
 }
@@ -124,15 +137,23 @@ void GLApplication::update() {
 void GLApplication::draw() {
   // appelée après chaque update
   // => tracer toute l'image
-  glUniform1f(glGetUniformLocation(_shader0,"coeff"),_coeff);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glUseProgram(_shader0);
   glBindVertexArray(_triangleVAO);
 
+  int location = glGetUniformLocation(_shader0,"coeff");
+  glUniform1f(location,_coeff);
+
+   glActiveTexture(GL_TEXTURE0); // on travaille avec l'unité de texture 0
+   glBindTexture(GL_TEXTURE_2D,_textureId); // l'unité de texture 0 correspond à la texture _textureId (image lagoon).
+   glUniform1f(glGetUniformLocation(_shader0,"texture"),0); // on affecte la valeur du sampler2D du fragment shader à l'unité de texture 0.
+   glDrawArrays(GL_TRIANGLE_STRIP,0,_trianglePosition.size()/3);
+
   //glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
   //glDrawArrays(GL_TRIANGLES,0,9);
-  glDrawArrays(GL_TRIANGLE_STRIP,0,_nbPoint);
+  //glDrawArrays(GL_TRIANGLE_STRIP,0,_nbPoint);
+  //glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 
   glBindVertexArray(0);
   glUseProgram(0);
@@ -203,12 +224,12 @@ GLuint GLApplication::initProgram(const std::string &filename) {
     cout << info;
     cout << endl;
     delete info;
-    throw ErrorD("Vertex Shader compilation error");
+    throw ErrorD("Fragment Shader compilation error");
   }
 
   glBindAttribLocation(program,0,"position");
   glBindAttribLocation(program,1,"color");
-
+  glBindAttribLocation(program,2,"texCoord");
 
   glLinkProgram(program);
   glGetProgramiv(program,GL_LINK_STATUS,&ok);
@@ -255,10 +276,13 @@ void GLApplication::initTriangleBuffer() {
   glBindBuffer(GL_ARRAY_BUFFER,_triangleColorBuffer);
   glBufferData(GL_ARRAY_BUFFER,_triangleColor.size()*sizeof(float),_triangleColor.data(),GL_STATIC_DRAW);
 
-  glGenBuffers(1,&_elementBuffer);
+  /*glGenBuffers(1,&_elementBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_elementData.size()*sizeof(unsigned int),_elementData.data(),GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_elementData.size()*sizeof(unsigned int),_elementData.data(),GL_STATIC_DRAW);*/
 
+  glGenBuffers(1,&_triangleTexCoordBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_triangleTexCoordBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_triangleTexCoord.size()*sizeof(unsigned int),_triangleTexCoord.data(),GL_STATIC_DRAW);
 
 }
 
@@ -273,10 +297,14 @@ void GLApplication::initTriangleVAO() {
   glBindBuffer(GL_ARRAY_BUFFER,_triangleColorBuffer);
   glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER,_triangleTexCoordBuffer);
+  glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,0,0);
+
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
 }
@@ -321,8 +349,11 @@ void GLApplication::initRing(int nbSlice,float r0,float r1) {
     float pasCouleur = 1.0 / nbSlice;
     double theta = 0;
     const double pi = 3.14159;
+    const float constante = 0.5;
 
     _nbPoint = 2 * nbSlice;
+
+    //_triangleTexCoord.push_back();
 
     for(GLuint i=0; i<=_nbPoint; i++) {
 
@@ -333,6 +364,13 @@ void GLApplication::initRing(int nbSlice,float r0,float r1) {
 
             _trianglePosition.push_back(r0 * sin(theta));
 
+            /*_triangleTexCoord.push_back(i/2 * pasCouleur);
+            _triangleTexCoord.push_back(0);*/
+
+            /* La constante permet de commencer le cercle à partir du point 0.5,0.5 de l'image */
+            /* la valeur permet gérer le zoom sur l'image */
+            _triangleTexCoord.push_back(constante + r0 * cos(theta) * 0.7);
+            _triangleTexCoord.push_back(constante + r0 * sin(theta) * 0.7);
             _triangleColor.push_back(0.0);
             _triangleColor.push_back((i/2) * pasCouleur);
             _triangleColor.push_back(0.0);
@@ -343,6 +381,12 @@ void GLApplication::initRing(int nbSlice,float r0,float r1) {
 
             _trianglePosition.push_back(r1 * sin(theta));
 
+            /*_triangleTexCoord.push_back(((i - 1) / 2) * pasCouleur);
+            _triangleTexCoord.push_back(1);*/
+
+            _triangleTexCoord.push_back(constante + r1 * cos(theta) * 0.7);
+            _triangleTexCoord.push_back(constante + r1 * sin(theta) * 0.7);
+
             _triangleColor.push_back(0.0);
             _triangleColor.push_back(0.0);
             _triangleColor.push_back(1 - ((i/2) * pasCouleur));
@@ -351,5 +395,7 @@ void GLApplication::initRing(int nbSlice,float r0,float r1) {
         }
 
         _trianglePosition.push_back(0.0);
+
     }
+
 }

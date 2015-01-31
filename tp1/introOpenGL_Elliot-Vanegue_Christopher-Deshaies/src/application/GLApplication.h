@@ -49,6 +49,7 @@ private:
   GLuint _nbPoint;
 
   float _coeff;
+  int cpt;
   bool _retrecie;
 
 
