@@ -16,5 +16,7 @@ les points sont relié différement.
 
 Q10) Selon l'ordre donné dans les commentaires.
 
-Q12) L'ordre des indices s'applique sur la oculeur car celle-ci est différente 
-avec GL_ELEMENT_ARRAY_BUFFER
+Q12) L'ordre des indices s'applique sur la couleur car la couleur dépend de la position
+des points.
+
+Nous avons compris l'ensemble des notions abordé dans le TP mais nous ne sommes pas sur du calcul que nous avons appliqué pour la question 28. Noud avons appliqué la constante 0.5 pour se positionner au bon endroit sur la texture pour le départ du cercle mais nous avons trouvé le coefficient 0.7 en testant plusieurs valeurs.

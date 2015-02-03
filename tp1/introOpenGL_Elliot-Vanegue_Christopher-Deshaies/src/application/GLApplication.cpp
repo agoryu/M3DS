@@ -44,7 +44,7 @@ GLApplication::GLApplication() {
     0.9,0.0,0.0,1
   };*/
 
-    _trianglePosition = {
+    /*_trianglePosition = {
         -0.8,-0.8,0.0,
         -0.8,0.8,0.0,
         -0.4,-0.8,0.0,
@@ -54,21 +54,33 @@ GLApplication::GLApplication() {
         0.4,-0.8,0.0,
         0.4,0.8,0.0,
         0.8,-0.8,0.0
-      };
+      };*/
+
+
       // tous les sommets à rouge :
-      _triangleColor.clear();
+      /*_triangleColor.clear();
       for(unsigned int i=0;i<9;++i) {
         _triangleColor.push_back(1);_triangleColor.push_back(0);_triangleColor.push_back(0);_triangleColor.push_back(1);
-      }
-
-  _elementData = {
+      }*/
+    //initStrip(10, -0.8, 0.8, -0.8 , 0.8);
+    _retrecie = true;
+    _coeff = 1;
+    cpt = 0;
+    initRing(100, 0.2, 0.6);
+  /*_elementData = {
       0, 3, 2, 2, 1, 4
-  };
+  };*/
 
+  /*_trianglePosition = { -0.6,-0.8,0,
+                        -0.6,0.8,0,
+                        0.6,-0.8,0,
+                        0.6,0.8,0 };*/
+  /*_triangleTexCoord = { 0,0.5,
+                        0,1,
+                        1,0.5,
+                        1,1 };*/
 
 }
-
-
 
 
 /** ********************************************************************** **/
@@ -78,11 +90,11 @@ void GLApplication::initialize() {
   glClearColor(1,1,1,1);
 
   glLineWidth(2.0);
-  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 
   _shader0=initProgram("simple");
-
 
   initTriangleBuffer();
   initTriangleVAO();
@@ -104,7 +116,21 @@ void GLApplication::update() {
   // => mettre à jour les données de l'application
   // avant l'affichage de la prochaine image (animation)
   // ...
-
+    cpt++;
+    if(cpt == 100){
+        if(_retrecie) {
+            _coeff -= 0.2;
+            if(_coeff <= 0.0) {
+                _retrecie = false;
+            }
+        } else {
+            _coeff += 0.2;
+            if(_coeff >= 1.0) {
+                _retrecie = true;
+            }
+        }
+        cpt = 0;
+    }
 
 }
 
@@ -116,9 +142,18 @@ void GLApplication::draw() {
   glUseProgram(_shader0);
   glBindVertexArray(_triangleVAO);
 
+  int location = glGetUniformLocation(_shader0,"coeff");
+  glUniform1f(location,_coeff);
+
+   glActiveTexture(GL_TEXTURE0); // on travaille avec l'unité de texture 0
+   glBindTexture(GL_TEXTURE_2D,_textureId); // l'unité de texture 0 correspond à la texture _textureId (image lagoon).
+   glUniform1f(glGetUniformLocation(_shader0,"texture"),0); // on affecte la valeur du sampler2D du fragment shader à l'unité de texture 0.
+   glDrawArrays(GL_TRIANGLE_STRIP,0,_trianglePosition.size()/3);
+
   //glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
   //glDrawArrays(GL_TRIANGLES,0,9);
-  glDrawArrays(GL_TRIANGLE_STRIP,0,8);
+  //glDrawArrays(GL_TRIANGLE_STRIP,0,_nbPoint);
+  //glDrawArrays(GL_TRIANGLE_STRIP,0,4);
 
   glBindVertexArray(0);
   glUseProgram(0);
@@ -189,12 +224,12 @@ GLuint GLApplication::initProgram(const std::string &filename) {
     cout << info;
     cout << endl;
     delete info;
-    throw ErrorD("Vertex Shader compilation error");
+    throw ErrorD("Fragment Shader compilation error");
   }
 
   glBindAttribLocation(program,0,"position");
   glBindAttribLocation(program,1,"color");
-
+  glBindAttribLocation(program,2,"texCoord");
 
   glLinkProgram(program);
   glGetProgramiv(program,GL_LINK_STATUS,&ok);
@@ -241,10 +276,13 @@ void GLApplication::initTriangleBuffer() {
   glBindBuffer(GL_ARRAY_BUFFER,_triangleColorBuffer);
   glBufferData(GL_ARRAY_BUFFER,_triangleColor.size()*sizeof(float),_triangleColor.data(),GL_STATIC_DRAW);
 
-  glGenBuffers(1,&_elementBuffer);
+  /*glGenBuffers(1,&_elementBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_elementData.size()*sizeof(unsigned int),_elementData.data(),GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_elementData.size()*sizeof(unsigned int),_elementData.data(),GL_STATIC_DRAW);*/
 
+  glGenBuffers(1,&_triangleTexCoordBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_triangleTexCoordBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_triangleTexCoord.size()*sizeof(unsigned int),_triangleTexCoord.data(),GL_STATIC_DRAW);
 
 }
 
@@ -259,22 +297,105 @@ void GLApplication::initTriangleVAO() {
   glBindBuffer(GL_ARRAY_BUFFER,_triangleColorBuffer);
   glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,0,0);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER,_triangleTexCoordBuffer);
+  glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,0,0);
+
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
 }
 
 void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
 
-    unsigned int pas = (sqrt((xmin * xmin)) + sqrt((xmax * xmax))) / nbSlice;
+    float pas = (sqrt((xmin * xmin)) + sqrt((xmax * xmax))) / nbSlice;
+    float pasCouleur = 0.5 / nbSlice;
+    _nbPoint = 2 * nbSlice;
 
-    for(int i=0; i<nbSlice; i++) {
-        _trianglePosition.push_back(xmin + i * pas);
-        _trianglePosition.push_back();
-        _trianglePosition.push_back();
+    for(GLuint i=0; i<=_nbPoint; i++) {
+
+        if(i%2 == 0) {
+            _trianglePosition.push_back(xmin + i/2 * pas);
+
+            _trianglePosition.push_back(ymin);
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(i * pasCouleur);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+
+        } else {
+            _trianglePosition.push_back(xmin + ((i - 1) / 2) * pas);
+
+            _trianglePosition.push_back(ymax);
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(1 - (i * pasCouleur));
+            _triangleColor.push_back(0.0);
+
+        }
+
+        _trianglePosition.push_back(0.0);
     }
+
 }
 
+void GLApplication::initRing(int nbSlice,float r0,float r1) {
+
+    float pasCouleur = 1.0 / nbSlice;
+    double theta = 0;
+    const double pi = 3.14159;
+    const float constante = 0.5;
+
+    _nbPoint = 2 * nbSlice;
+
+    //_triangleTexCoord.push_back();
+
+    for(GLuint i=0; i<=_nbPoint; i++) {
+
+        if(i%2 == 0) {
+            theta = ((2 * pi) / nbSlice) * i;
+
+            _trianglePosition.push_back(r0 * cos(theta));
+
+            _trianglePosition.push_back(r0 * sin(theta));
+
+            /*_triangleTexCoord.push_back(i/2 * pasCouleur);
+            _triangleTexCoord.push_back(0);*/
+
+            /* La constante permet de commencer le cercle à partir du point 0.5,0.5 de l'image */
+            /* la valeur permet gérer le zoom sur l'image */
+            _triangleTexCoord.push_back(constante + r0 * cos(theta) * 0.7);
+            _triangleTexCoord.push_back(constante + r0 * sin(theta) * 0.7);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back((i/2) * pasCouleur);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+
+        } else {
+            _trianglePosition.push_back(r1 * cos(theta));
+
+            _trianglePosition.push_back(r1 * sin(theta));
+
+            /*_triangleTexCoord.push_back(((i - 1) / 2) * pasCouleur);
+            _triangleTexCoord.push_back(1);*/
+
+            _triangleTexCoord.push_back(constante + r1 * cos(theta) * 0.7);
+            _triangleTexCoord.push_back(constante + r1 * sin(theta) * 0.7);
+
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(0.0);
+            _triangleColor.push_back(1 - ((i/2) * pasCouleur));
+            _triangleColor.push_back(0.0);
+
+        }
+
+        _trianglePosition.push_back(0.0);
+
+    }
+
+}

@@ -6,9 +6,10 @@
 #include "Tools.h"
 
 #include <string>
+#include <cmath>
 
 class GLApplication : public GLWidget {
-  Q_OBJECT  
+  Q_OBJECT
 public:
   GLApplication();
   virtual ~GLApplication();
@@ -29,6 +30,7 @@ public:
   void initTriangleVAO();
   void initTexture();
   void initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax);
+  void initRing(int nbSlice,float r0,float r1);
 
 private:
   std::vector<float> _trianglePosition;
@@ -44,6 +46,11 @@ private:
   GLuint _triangleVAO;
   GLuint _shader0;
   GLuint _textureId;
+  GLuint _nbPoint;
+
+  float _coeff;
+  int cpt;
+  bool _retrecie;
 
 
 
